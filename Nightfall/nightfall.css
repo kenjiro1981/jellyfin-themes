@@ -1,0 +1,1097 @@
+/* ==========================================================================
+   NIGHTFALL  -  Custom-CSS-Theme fuer Jellyfin 12 (Web-Client)
+   --------------------------------------------------------------------------
+   Einbau:  Dashboard > Branding > "Custom CSS Code"  (serverweit)
+       oder Einstellungen > Anzeige > "Benutzerdefiniertes CSS" (pro Benutzer)
+
+   Getestet gegen die DOM-Struktur von jellyfin-web 12.x:
+     - Modern-Layout (React/MUI, Standard seit 12.0)  -> .MuiAppBar-root ...
+     - Legacy-Layout                                  -> .skinHeader ...
+   Beide Layouts werden gestylt.
+
+   HERO-BANNER: reines CSS. Die erste Startseiten-Zeile mit Querformat-Karten
+   von Filmen/Episoden (normalerweise "Weiterschauen" oder "Als Naechstes")
+   wird automatisch zum Vollbild-Banner und nach oben sortiert. Mit den
+   Pfeil-Buttons blaetterst du durch die Titel.
+   Braucht einen Browser mit :has() und Container Queries (Chrome/Edge 105+,
+   Safari 16+, Firefox 121+). Aeltere Clients zeigen die normale Zeile.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+
+/* ==========================================================================
+   1. EINSTELLUNGEN  -  hier anpassen
+   ========================================================================== */
+:root {
+    /* Akzentfarbe (Hex + dieselbe Farbe als RGB-Kanaele ohne Kommas).
+       Alternativen:
+         Netflix-Rot   #e50914 / 229 9 20
+         Violett       #8b5cf6 / 139 92 246
+         Cyan          #06b6d4 / 6 182 212
+         Gold          #f5b301 / 245 179 1                                   */
+    --nf-accent: #e11d48;
+    --nf-accent-rgb: 225 29 72;
+    --nf-accent-2: #fb7185;          /* zweite Verlaufsfarbe */
+
+    --nf-bg: #07080c;                /* Seitenhintergrund */
+    --nf-bg-rgb: 7 8 12;
+    --nf-surface: rgb(18 20 27 / 0.78);
+    --nf-surface-solid: #12141b;
+    --nf-border: rgb(255 255 255 / 0.08);
+    --nf-text: #f4f5f7;
+    --nf-text-dim: rgb(244 245 247 / 0.62);
+
+    --nf-radius: 12px;
+    --nf-radius-lg: 18px;
+    --nf-blur: 22px;
+    --nf-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --nf-hover-scale: 1.07;
+
+    /* Hero-Banner */
+    --nf-hero-height: clamp(22rem, 46vw, 48rem);
+    /* Schiebt den Banner unter die (transparente) Kopfleiste.
+       0px = Banner beginnt unter der Leiste; z. B. 4.5rem = volle Bleed-Optik */
+    --nf-hero-pull: 0px;
+
+    --nf-font: 'Manrope', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+    accent-color: var(--nf-accent);
+}
+
+
+/* ==========================================================================
+   2. JELLYFIN-12-PALETTE (MUI CSS-Variablen des Modern-Layouts)
+   ========================================================================== */
+html:root {
+    --jf-palette-primary-main: var(--nf-accent);
+    --jf-palette-primary-mainChannel: var(--nf-accent-rgb);
+    --jf-palette-primary-light: var(--nf-accent-2);
+    --jf-palette-primary-dark: #be123c;
+    --jf-palette-primary-contrastText: #fff;
+    --jf-palette-secondary-main: var(--nf-accent);
+    --jf-palette-secondary-contrastText: #fff;
+
+    --jf-palette-background-default: var(--nf-bg);
+    --jf-palette-background-defaultChannel: var(--nf-bg-rgb);
+    --jf-palette-background-paper: var(--nf-surface-solid);
+    --jf-palette-background-paperChannel: 18 20 27;
+    --jf-palette-background-defaultImage: none;
+
+    --jf-palette-AppBar-defaultBg: transparent;
+    --jf-palette-AppBar-darkBg: transparent;
+    --jf-palette-AppBar-transparentBg: transparent;
+    --jf-palette-AppBar-gradient: none;
+
+    --jf-palette-text-primary: var(--nf-text);
+    --jf-palette-text-secondary: var(--nf-text-dim);
+    --jf-palette-divider: var(--nf-border);
+
+    --jf-palette-action-hover: rgb(255 255 255 / 0.07);
+    --jf-palette-action-selected: rgb(var(--nf-accent-rgb) / 0.18);
+    --jf-palette-action-focus: rgb(var(--nf-accent-rgb) / 0.24);
+    --jf-palette-FilledInput-bg: rgb(255 255 255 / 0.05);
+    --jf-palette-Button-inheritContainedBg: rgb(255 255 255 / 0.08);
+
+    --jf-card-borderRadius: var(--nf-radius);
+}
+
+
+/* ==========================================================================
+   3. GRUNDLAGEN
+   ========================================================================== */
+html,
+body {
+    background-color: var(--nf-bg) !important;
+    color: var(--nf-text);
+    font-family: var(--nf-font) !important;
+    -webkit-font-smoothing: antialiased;
+    scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+}
+
+body,
+button,
+input,
+select,
+textarea,
+h1, h2, h3, h4,
+.MuiTypography-root,
+.MuiButton-root,
+.MuiListItemText-primary {
+    font-family: var(--nf-font) !important;
+}
+
+/* dezentes Farbleuchten hinter allem */
+.backgroundContainer {
+    background:
+        radial-gradient(1100px 620px at 85% -12%, rgb(var(--nf-accent-rgb) / 0.10), transparent 60%),
+        radial-gradient(900px 520px at -10% 110%, rgb(99 102 241 / 0.07), transparent 60%),
+        var(--nf-bg) !important;
+}
+
+.backgroundContainer.withBackdrop {
+    background: linear-gradient(180deg, rgb(var(--nf-bg-rgb) / 0.78), rgb(var(--nf-bg-rgb) / 0.94)) !important;
+}
+
+.backdropContainer {
+    filter: blur(6px) saturate(120%);
+}
+
+::selection {
+    background: rgb(var(--nf-accent-rgb) / 0.45);
+    color: #fff;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.14);
+    border: 2px solid transparent;
+    border-radius: 99px;
+    background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--nf-accent-rgb) / 0.7);
+    background-clip: padding-box;
+}
+
+@keyframes nf-rise {
+    from { opacity: 0; transform: translate3d(0, 18px, 0); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes nf-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes nf-kenburns {
+    from { transform: scale(1.02); }
+    to   { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+}
+
+
+/* ==========================================================================
+   4. KOPFLEISTE  (Modern: MUI AppBar  |  Legacy: .skinHeader)
+   ========================================================================== */
+.MuiAppBar-root.MuiAppBar-positionFixed,
+.skinHeader:not(.osdHeader) {
+    background: linear-gradient(180deg, rgb(var(--nf-bg-rgb) / 0.88), rgb(var(--nf-bg-rgb) / 0.55)) !important;
+    -webkit-backdrop-filter: blur(var(--nf-blur)) saturate(150%);
+    backdrop-filter: blur(var(--nf-blur)) saturate(150%);
+    border-bottom: 1px solid var(--nf-border);
+    box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.9) !important;
+    color: var(--nf-text) !important;
+}
+
+.MuiAppBar-root .MuiButton-root,
+.MuiAppBar-root .MuiIconButton-root,
+.skinHeader .headerButton,
+.skinHeader .paper-icon-button-light {
+    border-radius: 999px !important;
+    transition: background-color 0.25s var(--nf-ease), color 0.25s, transform 0.25s var(--nf-ease) !important;
+}
+
+.MuiAppBar-root .MuiButton-root:hover,
+.MuiAppBar-root .MuiIconButton-root:hover,
+.skinHeader .headerButton:hover {
+    background-color: rgb(255 255 255 / 0.09) !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+}
+
+/* aktiver Menuepunkt in der Leiste */
+.MuiAppBar-root .MuiButton-root.Mui-selected,
+.MuiAppBar-root .MuiButton-root[aria-current="page"],
+.emby-tab-button-active {
+    color: #fff !important;
+    box-shadow: inset 0 -2px 0 var(--nf-accent) !important;
+}
+
+.emby-tab-button {
+    font-weight: 600 !important;
+    color: var(--nf-text-dim) !important;
+    transition: color 0.25s !important;
+}
+
+.emby-tab-button:hover {
+    color: #fff !important;
+}
+
+/* Library-Toolbar (zweite Zeile im Modern-Layout) */
+.MuiAppBar-root > .MuiToolbar-root:nth-child(2) .MuiButton-root,
+.MuiAppBar-root .MuiButtonGroup-root .MuiButton-root {
+    border-radius: 10px !important;
+}
+
+.MuiChip-root {
+    border-radius: 999px !important;
+    background: rgb(255 255 255 / 0.07) !important;
+    border: 1px solid var(--nf-border) !important;
+}
+
+
+/* ==========================================================================
+   5. SEITENMENUE  (Modern: MUI Drawer  |  Legacy: .mainDrawer)
+   ========================================================================== */
+.MuiDrawer-paper,
+.mainDrawer {
+    background: rgb(10 11 16 / 0.9) !important;
+    -webkit-backdrop-filter: blur(var(--nf-blur)) saturate(140%);
+    backdrop-filter: blur(var(--nf-blur)) saturate(140%);
+    border-right: 1px solid var(--nf-border) !important;
+}
+
+.MuiDrawer-paper .MuiListItemButton-root,
+.navMenuOption {
+    margin: 2px 10px !important;
+    border-radius: 10px !important;
+    transition: background-color 0.25s var(--nf-ease), transform 0.25s var(--nf-ease), color 0.25s !important;
+}
+
+.MuiDrawer-paper .MuiListItemButton-root:hover,
+.navMenuOption:hover {
+    background: rgb(255 255 255 / 0.07) !important;
+    transform: translateX(3px);
+}
+
+.MuiDrawer-paper .MuiListItemButton-root.Mui-selected,
+.navMenuOption-selected {
+    background: linear-gradient(90deg, rgb(var(--nf-accent-rgb) / 0.24), rgb(var(--nf-accent-rgb) / 0.04)) !important;
+    box-shadow: inset 3px 0 0 var(--nf-accent);
+    color: #fff !important;
+}
+
+.MuiDrawer-paper .Mui-selected .MuiListItemIcon-root,
+.navMenuOption-selected .navMenuOptionIcon {
+    color: var(--nf-accent) !important;
+}
+
+.MuiDrawer-paper .MuiListSubheader-root,
+.sidebarHeader {
+    background: transparent !important;
+    color: var(--nf-text-dim) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+
+/* ==========================================================================
+   6. ZEILEN-UEBERSCHRIFTEN
+   ========================================================================== */
+.sectionTitle {
+    font-weight: 800 !important;
+    font-size: clamp(1.1rem, 1.5vw, 1.5rem) !important;
+    letter-spacing: -0.015em;
+    color: var(--nf-text) !important;
+}
+
+.sectionTitleTextButton,
+.sectionTitle-link {
+    transition: color 0.25s !important;
+}
+
+.sectionTitleTextButton .material-icons,
+.sectionTitle-link .material-icons {
+    transition: transform 0.3s var(--nf-ease), opacity 0.3s !important;
+    opacity: 0.5;
+}
+
+.sectionTitleTextButton:hover,
+.sectionTitle-link:hover {
+    color: var(--nf-accent) !important;
+}
+
+.sectionTitleTextButton:hover .material-icons,
+.sectionTitle-link:hover .material-icons {
+    transform: translateX(5px);
+    opacity: 1;
+    color: var(--nf-accent);
+}
+
+/* Zeilen blenden beim Oeffnen der Startseite gestaffelt ein */
+.homeSectionsContainer > .verticalSection {
+    animation: nf-rise 0.7s var(--nf-ease) both;
+}
+.homeSectionsContainer > .verticalSection:nth-child(2) { animation-delay: 0.06s; }
+.homeSectionsContainer > .verticalSection:nth-child(3) { animation-delay: 0.12s; }
+.homeSectionsContainer > .verticalSection:nth-child(4) { animation-delay: 0.18s; }
+.homeSectionsContainer > .verticalSection:nth-child(n+5) { animation-delay: 0.24s; }
+
+
+/* ==========================================================================
+   7. KARTEN  (Poster, Querformat, Quadrate)  -  Hover-Effekte
+   ========================================================================== */
+.cardScalable {
+    border-radius: var(--nf-radius) !important;
+    overflow: hidden;
+    background: var(--nf-surface-solid);
+    box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.8);
+    transition: box-shadow 0.45s var(--nf-ease) !important;
+}
+
+.cardImageContainer,
+.cardContent {
+    border-radius: var(--nf-radius) !important;
+}
+
+.cardBox {
+    transition: transform 0.45s var(--nf-ease), filter 0.45s var(--nf-ease) !important;
+}
+
+/* Platz, damit vergroesserte Karten nicht am Zeilenrand abgeschnitten werden */
+.verticalSection > .emby-scroller {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    margin-top: -0.75rem !important;
+    margin-bottom: -0.75rem !important;
+}
+
+.cardImageContainer {
+    transition: transform 0.9s var(--nf-ease), filter 0.5s var(--nf-ease) !important;
+}
+
+.cardText {
+    color: var(--nf-text) !important;
+    font-weight: 600;
+}
+
+.cardText-secondary {
+    color: var(--nf-text-dim) !important;
+    font-weight: 500;
+}
+
+/* Overlay: Verlauf statt grauer Flaeche */
+.cardOverlayContainer {
+    background: linear-gradient(0deg, rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.12) 55%, transparent 100%) !important;
+    border-radius: 0 !important;
+    transition: opacity 0.35s var(--nf-ease) !important;
+}
+
+/* runder Play-Button in der Kartenmitte */
+.cardOverlayFab-primary {
+    background: rgb(var(--nf-accent-rgb) / 0.95) !important;
+    color: #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 8px 26px rgb(var(--nf-accent-rgb) / 0.55);
+    transform: scale(0.75);
+    transition: transform 0.35s var(--nf-ease), box-shadow 0.35s !important;
+}
+
+.card:hover .cardOverlayFab-primary {
+    transform: scale(1);
+}
+
+.cardOverlayFab-primary:hover {
+    transform: scale(1.12) !important;
+    box-shadow: 0 10px 34px rgb(var(--nf-accent-rgb) / 0.8);
+}
+
+.cardOverlayButton-br .cardOverlayButton {
+    transition: transform 0.25s var(--nf-ease), color 0.25s !important;
+}
+
+.cardOverlayButton-br .cardOverlayButton:hover {
+    transform: scale(1.18);
+    color: var(--nf-accent-2) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .card-hoverable:hover {
+        position: relative;
+        z-index: 5;
+    }
+
+    .card-hoverable:hover .cardBox {
+        transform: translateY(-6px) scale(var(--nf-hover-scale));
+    }
+
+    .card-hoverable:hover .cardScalable {
+        box-shadow:
+            0 22px 44px -14px rgb(0 0 0 / 0.9),
+            0 0 0 2px rgb(var(--nf-accent-rgb) / 0.9),
+            0 0 36px -4px rgb(var(--nf-accent-rgb) / 0.5);
+    }
+
+    .card-hoverable:hover .cardImageContainer {
+        transform: scale(1.07);
+        filter: saturate(1.15) brightness(1.06);
+    }
+
+    .card-hoverable:hover .cardText-first {
+        color: #fff !important;
+    }
+
+    /* Spotlight: die anderen Karten der Zeile treten zurueck */
+    .itemsContainer:has(> .card-hoverable:hover) > .card:not(:hover) .cardBox {
+        filter: brightness(0.55) saturate(0.75);
+    }
+}
+
+/* TV-Layout: Fokus statt Hover */
+.layout-tv .card:focus .cardScalable {
+    box-shadow:
+        0 0 0 3px var(--nf-accent),
+        0 0 40px -4px rgb(var(--nf-accent-rgb) / 0.6) !important;
+}
+
+/* Fortschrittsbalken & Indikatoren */
+.itemProgressBar {
+    height: 4px !important;
+    background: rgb(255 255 255 / 0.18) !important;
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.itemProgressBarForeground {
+    background: linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2)) !important;
+    border-radius: 99px;
+    box-shadow: 0 0 10px rgb(var(--nf-accent-rgb) / 0.8);
+}
+
+.playedIndicator,
+.countIndicator,
+.indicator {
+    background: var(--nf-accent) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgb(var(--nf-accent-rgb) / 0.55);
+}
+
+/* "Meine Medien"-Kacheln: Titel liegt auf dem Bild */
+.card[data-type="CollectionFolder"] .cardFooter,
+.card[data-type="UserView"] .cardFooter {
+    transition: transform 0.4s var(--nf-ease) !important;
+}
+
+.card[data-type="CollectionFolder"]:hover .cardFooter,
+.card[data-type="UserView"]:hover .cardFooter {
+    transform: translateY(-2px);
+}
+
+
+/* ==========================================================================
+   8. HERO-BANNER  (Netflix-Stil, reines CSS)
+   --------------------------------------------------------------------------
+   Selektor-Logik:  erste .verticalSection, die Querformat-Karten von
+   Filmen/Episoden/Serien enthaelt - und nur die erste davon.
+   ========================================================================== */
+.homeSectionsContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) {
+    --nf-hero: 1;
+    order: -1;
+    position: relative;
+    margin: calc(-1 * var(--nf-hero-pull)) 0 1.75rem !important;
+    padding: 0 !important;
+    animation: nf-fade 0.9s var(--nf-ease) both !important;
+}
+
+/* Die folgenden Regeln haengen alle am selben Hero-Selektor.
+   Er ist lang, weil CSS keine Aliase kennt - bitte nicht kuerzen. */
+
+/* Label "WEITERSCHAUEN" oben links als Glas-Pille */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .sectionTitle {
+    position: absolute;
+    z-index: 6;
+    top: calc(var(--nf-hero-pull) + 1.25rem);
+    left: 4%;
+    margin: 0 !important;
+    padding: 0.4rem 0.9rem 0.4rem 0.8rem !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #fff !important;
+    background: rgb(0 0 0 / 0.35);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-left: 3px solid var(--nf-accent);
+    border-radius: 999px;
+}
+
+/* Blaetter-Pfeile oben rechts */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) > .emby-scrollbuttons {
+    position: absolute !important;
+    z-index: 6;
+    top: calc(var(--nf-hero-pull) + 1rem) !important;
+    right: 3% !important;
+    bottom: auto !important;
+    gap: 0.5rem;
+    padding: 0 !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) > .emby-scrollbuttons .paper-icon-button-light {
+    background: rgb(0 0 0 / 0.38) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(255 255 255 / 0.16) !important;
+    border-radius: 50% !important;
+    color: #fff !important;
+    transition: background-color 0.25s, transform 0.25s var(--nf-ease) !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) > .emby-scrollbuttons .paper-icon-button-light:hover {
+    background: var(--nf-accent) !important;
+    transform: scale(1.1);
+}
+
+/* Scroller als Container -> jede Karte ist genau eine "Folie" breit */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) > .emby-scroller {
+    container-type: inline-size;
+    margin: 0 !important;
+    padding: 0 !important;
+    scroll-snap-type: x mandatory;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .itemsContainer {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .card {
+    width: 100vw !important;
+    width: 100cqw !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    scroll-snap-align: start;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardBox {
+    position: relative;
+    margin: 0 !important;
+    transform: none !important;
+    filter: none !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardScalable {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: var(--nf-bg);
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardPadder {
+    padding-bottom: 0 !important;
+    height: calc(var(--nf-hero-height) + var(--nf-hero-pull));
+}
+
+/* Bild mit langsamem Ken-Burns-Zoom */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardImageContainer {
+    border-radius: 0 !important;
+    background-size: cover !important;
+    background-position: center 25% !important;
+    filter: none !important;
+    animation: nf-kenburns 26s ease-in-out infinite alternate;
+}
+
+/* Kinoverlaeufe: links fuer den Text, unten in den Seitenhintergrund */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardImageContainer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgb(var(--nf-bg-rgb) / 0.94) 0%, rgb(var(--nf-bg-rgb) / 0.6) 32%, transparent 62%),
+        linear-gradient(0deg, var(--nf-bg) 0%, rgb(var(--nf-bg-rgb) / 0.55) 16%, transparent 42%),
+        linear-gradient(180deg, rgb(var(--nf-bg-rgb) / 0.55) 0%, transparent 22%);
+}
+
+/* Titel + Untertitel gross links auf dem Bild */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardFooter {
+    position: absolute !important;
+    z-index: 4;
+    left: 4%;
+    bottom: calc(10% + 4.5rem);
+    width: min(44rem, 52%);
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    pointer-events: none;
+    animation: nf-rise 0.9s 0.15s var(--nf-ease) both;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardText {
+    text-align: left !important;
+    justify-content: flex-start !important;
+    white-space: normal !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardText a {
+    pointer-events: auto;
+    color: inherit !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardText-first {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    font-size: clamp(1.9rem, 4.4vw, 4.2rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.035em;
+    color: #fff !important;
+    text-shadow: 0 4px 30px rgb(0 0 0 / 0.55);
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardText-secondary {
+    font-size: clamp(0.95rem, 1.25vw, 1.25rem) !important;
+    font-weight: 600 !important;
+    color: rgb(255 255 255 / 0.8) !important;
+}
+
+/* Overlay im Hero immer sichtbar, ohne Abdunkelung */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayContainer {
+    z-index: 3;
+    opacity: 1 !important;
+    background: transparent !important;
+}
+
+/* Weisser "Weiterschauen"-Button wie bei Netflix */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayFab-primary {
+    position: absolute !important;
+    top: auto !important;
+    left: 4% !important;
+    bottom: 10% !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.45rem;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0.75rem 1.7rem 0.75rem 1.2rem !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    color: #000 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    box-shadow: 0 12px 34px rgb(0 0 0 / 0.5) !important;
+    transition: background-color 0.25s, color 0.25s, transform 0.3s var(--nf-ease), box-shadow 0.3s !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayFab-primary::after {
+    content: "Weiterschauen";
+    font-family: var(--nf-font);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayFab-primary[data-action="play"]::after {
+    content: "Abspielen";
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayFab-primary .material-icons {
+    color: inherit !important;
+    font-size: 1.9rem !important;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayFab-primary:hover {
+    background: var(--nf-accent) !important;
+    color: #fff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 14px 40px rgb(var(--nf-accent-rgb) / 0.6) !important;
+}
+
+/* kleine Aktionen (gesehen, Favorit, Mehr) unten rechts als Glas-Buttons */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayButton-br {
+    right: 3% !important;
+    bottom: 10% !important;
+    gap: 0.5rem;
+}
+
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayButton-br .cardOverlayButton {
+    background: rgb(0 0 0 / 0.38) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(255 255 255 / 0.18) !important;
+    border-radius: 50% !important;
+}
+
+/* Fortschritt unter dem Titel statt am Bildrand */
+.homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .innerCardFooter {
+    left: 4% !important;
+    right: auto !important;
+    bottom: calc(10% + 3.6rem) !important;
+    width: min(20rem, 36%) !important;
+    z-index: 4;
+    background: transparent !important;
+}
+
+
+/* ==========================================================================
+   9. DETAILSEITE  (Film / Serie / Episode)
+   ========================================================================== */
+.itemBackdrop {
+    height: clamp(18rem, 58vh, 44rem) !important;
+    background-position: center 20% !important;
+    -webkit-mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
+    animation: nf-fade 1s var(--nf-ease) both;
+}
+
+.detailRibbon,
+.detailPagePrimaryContainer {
+    background: transparent !important;
+}
+
+.itemDetailPage .itemName,
+.itemDetailPage .parentName {
+    font-weight: 800 !important;
+    letter-spacing: -0.025em;
+    text-shadow: 0 4px 24px rgb(0 0 0 / 0.6);
+}
+
+.itemDetailPage .itemName {
+    font-size: clamp(1.8rem, 3.4vw, 3.2rem) !important;
+    line-height: 1.05 !important;
+}
+
+.detailLogo {
+    filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.7));
+}
+
+.detailImageContainer .cardScalable {
+    border-radius: var(--nf-radius-lg) !important;
+    box-shadow:
+        0 30px 60px -18px rgb(0 0 0 / 0.95),
+        0 0 0 1px rgb(255 255 255 / 0.06) !important;
+}
+
+.detailPagePrimaryContent,
+.detailPageSecondaryContainer {
+    animation: nf-rise 0.8s 0.1s var(--nf-ease) both;
+}
+
+.itemMiscInfo .mediaInfoOfficialRating {
+    border: 1px solid rgb(255 255 255 / 0.35) !important;
+    border-radius: 6px !important;
+    padding: 0.05em 0.45em !important;
+}
+
+.itemDetailPage .overview,
+.itemDetailPage .detail-clamp-text {
+    color: rgb(244 245 247 / 0.82) !important;
+    line-height: 1.6 !important;
+}
+
+.mainDetailButtons .detailButton {
+    margin: 0 0.35rem 0.5rem 0 !important;
+    border-radius: 999px !important;
+    background: rgb(255 255 255 / 0.08) !important;
+    border: 1px solid var(--nf-border) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    transition: background-color 0.25s, transform 0.3s var(--nf-ease), box-shadow 0.3s !important;
+}
+
+.mainDetailButtons .detailButton:hover {
+    background: rgb(255 255 255 / 0.16) !important;
+    transform: translateY(-2px);
+}
+
+.mainDetailButtons .detailButton.btnPlay,
+.mainDetailButtons .detailButton.btnResume {
+    background: linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2)) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 10px 30px -6px rgb(var(--nf-accent-rgb) / 0.65);
+}
+
+.mainDetailButtons .detailButton.btnPlay:hover,
+.mainDetailButtons .detailButton.btnResume:hover {
+    box-shadow: 0 14px 38px -4px rgb(var(--nf-accent-rgb) / 0.85);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.itemDetailPage .itemGenres a,
+.itemDetailPage .itemTags a,
+.itemDetailPage .itemExternalLinks a {
+    transition: color 0.2s !important;
+}
+
+.itemDetailPage .itemGenres a:hover,
+.itemDetailPage .itemTags a:hover,
+.itemDetailPage .itemExternalLinks a:hover {
+    color: var(--nf-accent-2) !important;
+}
+
+
+/* ==========================================================================
+   10. BUTTONS, EINGABEFELDER, SCHALTER
+   ========================================================================== */
+.button-submit,
+.raised.button-submit,
+.MuiButton-containedPrimary {
+    background: linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2)) !important;
+    color: #fff !important;
+    border-radius: 999px !important;
+    box-shadow: 0 8px 24px -8px rgb(var(--nf-accent-rgb) / 0.7) !important;
+    transition: transform 0.25s var(--nf-ease), box-shadow 0.25s, filter 0.25s !important;
+}
+
+.button-submit:hover,
+.MuiButton-containedPrimary:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 12px 30px -8px rgb(var(--nf-accent-rgb) / 0.9) !important;
+}
+
+.emby-button.raised:not(.button-submit),
+.MuiButton-contained:not(.MuiButton-containedPrimary) {
+    background: rgb(255 255 255 / 0.08) !important;
+    border: 1px solid var(--nf-border) !important;
+    border-radius: 999px !important;
+    transition: background-color 0.25s !important;
+}
+
+.emby-button.raised:not(.button-submit):hover,
+.MuiButton-contained:not(.MuiButton-containedPrimary):hover {
+    background: rgb(255 255 255 / 0.15) !important;
+}
+
+.emby-input,
+.emby-textarea,
+.emby-select-withcolor,
+.MuiFilledInput-root,
+.MuiOutlinedInput-root {
+    background: rgb(255 255 255 / 0.05) !important;
+    border: 1px solid var(--nf-border) !important;
+    border-radius: 10px !important;
+    color: var(--nf-text) !important;
+    transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s !important;
+}
+
+.emby-input:focus,
+.emby-textarea:focus,
+.emby-select-withcolor:focus,
+.MuiFilledInput-root.Mui-focused,
+.MuiOutlinedInput-root.Mui-focused {
+    background: rgb(255 255 255 / 0.08) !important;
+    border-color: var(--nf-accent) !important;
+    box-shadow: 0 0 0 4px rgb(var(--nf-accent-rgb) / 0.22) !important;
+    outline: none !important;
+}
+
+.MuiFilledInput-root::before,
+.MuiFilledInput-root::after,
+.MuiOutlinedInput-notchedOutline {
+    display: none !important;
+}
+
+.emby-checkbox:checked + span + .checkboxOutline,
+.MuiCheckbox-root.Mui-checked,
+.MuiRadio-root.Mui-checked {
+    background-color: var(--nf-accent) !important;
+    border-color: var(--nf-accent) !important;
+    color: var(--nf-accent) !important;
+}
+
+.MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+    background-color: var(--nf-accent) !important;
+    opacity: 0.7 !important;
+}
+
+.mdl-slider-background-lower,
+.emby-slider-background-lower {
+    background: linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2)) !important;
+}
+
+.paper-icon-button-light:not(.cardOverlayFab-primary) {
+    transition: background-color 0.2s, color 0.2s, transform 0.25s var(--nf-ease) !important;
+}
+
+.paper-icon-button-light:not(.cardOverlayFab-primary):not(.cardOverlayButton):hover {
+    color: #fff !important;
+    background-color: rgb(255 255 255 / 0.1) !important;
+}
+
+.emby-button:focus-visible,
+.paper-icon-button-light:focus-visible,
+.MuiButtonBase-root.Mui-focusVisible {
+    outline: 2px solid var(--nf-accent) !important;
+    outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   11. DIALOGE, MENUES, LISTEN, TOASTS
+   ========================================================================== */
+.dialog:not(.dialog-fullscreen),
+.actionSheet,
+.MuiMenu-paper,
+.MuiPopover-paper,
+.MuiDialog-paper,
+.MuiAutocomplete-paper {
+    background: rgb(16 18 24 / 0.84) !important;
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    backdrop-filter: blur(26px) saturate(160%);
+    border: 1px solid var(--nf-border) !important;
+    border-radius: var(--nf-radius-lg) !important;
+    box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.85) !important;
+    animation: nf-rise 0.35s var(--nf-ease) both;
+}
+
+.dialog-fullscreen {
+    background: var(--nf-bg) !important;
+}
+
+.dialogBackdropOpened,
+.MuiBackdrop-root:not(.MuiBackdrop-invisible) {
+    background: rgb(0 0 0 / 0.55) !important;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.actionSheetMenuItem,
+.MuiMenuItem-root,
+.MuiAutocomplete-option {
+    margin: 2px 6px !important;
+    border-radius: 8px !important;
+    transition: background-color 0.2s !important;
+}
+
+.actionSheetMenuItem:hover,
+.MuiMenuItem-root:hover,
+.MuiAutocomplete-option:hover {
+    background: rgb(var(--nf-accent-rgb) / 0.16) !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+    background: rgb(var(--nf-accent-rgb) / 0.24) !important;
+}
+
+.paperList {
+    background: var(--nf-surface) !important;
+    border: 1px solid var(--nf-border);
+    border-radius: var(--nf-radius) !important;
+    overflow: hidden;
+}
+
+.listItem {
+    transition: background-color 0.2s !important;
+}
+
+.listItem:hover {
+    background: rgb(255 255 255 / 0.04) !important;
+}
+
+.toast {
+    background: rgb(20 22 29 / 0.92) !important;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--nf-border);
+    border-left: 3px solid var(--nf-accent);
+    border-radius: var(--nf-radius) !important;
+}
+
+.MuiTooltip-tooltip {
+    background: rgb(20 22 29 / 0.95) !important;
+    border: 1px solid var(--nf-border);
+    border-radius: 8px !important;
+    font-family: var(--nf-font) !important;
+    font-weight: 600 !important;
+}
+
+
+/* ==========================================================================
+   12. PLAYER (OSD)
+   ========================================================================== */
+.videoOsdBottom {
+    background: linear-gradient(0deg, rgb(0 0 0 / 0.9) 0%, rgb(0 0 0 / 0.5) 55%, transparent 100%) !important;
+}
+
+.osdHeader {
+    background: linear-gradient(180deg, rgb(0 0 0 / 0.75), transparent) !important;
+    border: 0 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+.videoOsdBottom .osdTitle,
+.videoOsdBottom .osdMediaInfo {
+    font-weight: 700 !important;
+}
+
+.videoOsdBottom .paper-icon-button-light:hover {
+    transform: scale(1.15);
+    background: transparent !important;
+    color: var(--nf-accent-2) !important;
+}
+
+.videoOsdBottom .btnPause {
+    transform: scale(1.15);
+}
+
+
+/* ==========================================================================
+   13. HANDY / SCHMALE BILDSCHIRME
+   ========================================================================== */
+@media (max-width: 50em) {
+    :root {
+        --nf-hero-height: min(72vh, 120vw);
+        --nf-radius: 10px;
+    }
+
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardImageContainer::after {
+        background:
+            linear-gradient(0deg, var(--nf-bg) 0%, rgb(var(--nf-bg-rgb) / 0.75) 26%, transparent 60%),
+            linear-gradient(180deg, rgb(var(--nf-bg-rgb) / 0.6) 0%, transparent 20%);
+    }
+
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardFooter {
+        left: 5%;
+        right: 5%;
+        width: auto;
+        bottom: 7rem;
+        text-align: center !important;
+    }
+
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardText {
+        text-align: center !important;
+        justify-content: center !important;
+    }
+
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayFab-primary {
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 1.5rem !important;
+        width: max-content !important;
+        margin: 0 auto !important;
+    }
+
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .cardOverlayButton-br,
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) > .emby-scrollbuttons {
+        display: none !important;
+    }
+
+    .homeSectionsContainer > .verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])):not(.verticalSection:has(.overflowBackdropCard:is([data-type="Movie"], [data-type="Episode"], [data-type="Series"], [data-type="Video"], [data-type="MusicVideo"])) ~ .verticalSection) .innerCardFooter {
+        left: 25% !important;
+        width: 50% !important;
+        bottom: 6.1rem !important;
+    }
+}
+
+
+/* ==========================================================================
+   14. BARRIEREFREIHEIT: weniger Bewegung, wenn im System eingestellt
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}
