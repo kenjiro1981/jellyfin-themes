@@ -41,12 +41,14 @@ set "ORIGARGS=%*"
 
 rem ============================ KONFIGURATION ================================
 rem Hintergrundbild (leer = nicht aendern). Der Pfad muss fuer den Benutzer
-rem lesbar sein, z.B. C:\Windows\Web\Wallpaper\Firma\hintergrund.jpg
-set "WALLPAPER="
+rem lesbar sein (lokaler Pfad oder UNC-Pfad).
+set "WALLPAPER=\\intern.afz-rostock.de\NETLOGON\Hintergrund\AFZ-Wallpaper.png"
 
 rem Sperrbildschirm (leer = nicht aendern). Benoetigt Adminrechte und gilt fuer
 rem ALLE Benutzer des Rechners (PersonalizationCSP, funktioniert auch mit Pro).
-set "LOCKSCREEN="
+rem Das Bild wird nach %SystemRoot%\Web\Screen kopiert, da der Sperrbildschirm
+rem auch ohne angemeldeten Benutzer / Netzwerk verfuegbar sein muss.
+set "LOCKSCREEN=\\intern.afz-rostock.de\NETLOGON\Hintergrund\AFZ-Sperrbildschirm.png"
 
 rem Gespeicherte Windows-Anmeldedaten (Anmeldeinformationsverwaltung) loeschen
 set "RESET_CREDENTIALS=1"
@@ -315,10 +317,23 @@ if "%IS_ADMIN%"=="0" (
   call :Log "  WARNUNG: Keine Adminrechte - Sperrbildschirm wird nicht gesetzt."
   goto lockscreen_done
 )
-if not exist "%LOCKSCREEN%" call :Log "  WARNUNG: Bilddatei nicht gefunden."
+if not exist "%LOCKSCREEN%" (
+  call :Log "  WARNUNG: Bilddatei nicht gefunden - Sperrbildschirm wird nicht gesetzt."
+  goto lockscreen_done
+)
+rem lokale Kopie anlegen und diese verwenden
+for %%I in ("%LOCKSCREEN%") do set "LOCK_LOCAL=%SystemRoot%\Web\Screen\%%~nxI"
+call :Log "  kopieren: %LOCKSCREEN% nach %LOCK_LOCAL%"
+if "%DRY%"=="1" goto lock_copied
+copy /y "%LOCKSCREEN%" "%LOCK_LOCAL%" >nul 2>&1
+if errorlevel 1 (
+  call :Log "    WARNUNG: Kopieren fehlgeschlagen - verwende Netzwerkpfad."
+  set "LOCK_LOCAL=%LOCKSCREEN%"
+)
+:lock_copied
 set "CSP=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
-call :RegAdd "%CSP%" LockScreenImagePath REG_SZ "%LOCKSCREEN%"
-call :RegAdd "%CSP%" LockScreenImageUrl REG_SZ "%LOCKSCREEN%"
+call :RegAdd "%CSP%" LockScreenImagePath REG_SZ "%LOCK_LOCAL%"
+call :RegAdd "%CSP%" LockScreenImageUrl REG_SZ "%LOCK_LOCAL%"
 call :RegAdd "%CSP%" LockScreenImageStatus REG_DWORD 1
 rem Windows-Blickpunkt (Spotlight) auf dem Sperrbildschirm abschalten
 set "CDM=%HK%\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"

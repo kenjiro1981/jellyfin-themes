@@ -32,7 +32,7 @@ Profil-Reset.cmd max.muster /TEST   :: Testlauf, zeigt nur an
 
 ## Hintergrund / Sperrbildschirm
 
-Oben im Skript `WALLPAPER` bzw. `LOCKSCREEN` setzen (das Bild z.B. nach `C:\Windows\Web\Wallpaper\Firma\` legen, damit alle Benutzer es lesen können).
+Konfiguriert sind `\\intern.afz-rostock.de\NETLOGON\Hintergrund\AFZ-Wallpaper.png` (Hintergrund) und `AFZ-Sperrbildschirm.png` (Sperrbildschirm). Leer lassen = nicht ändern. Das Sperrbildschirm-Bild wird lokal nach `%SystemRoot%\Web\Screen` kopiert, weil es auch vor der Anmeldung ohne Netzwerkzugriff verfügbar sein muss.
 Der Sperrbildschirm wird über `PersonalizationCSP` (HKLM) gesetzt. Das braucht Adminrechte, gilt für alle Benutzer und funktioniert auch mit Windows Pro.
 Zuverlässiger ist die GPO (*Desktophintergrund* bzw. *Bestimmtes Standardbild für den Sperrbildschirm erzwingen*, letzteres nur für Enterprise/Education).
 
