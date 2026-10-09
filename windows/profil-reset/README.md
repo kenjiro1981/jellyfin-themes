@@ -22,8 +22,6 @@ Profil-Reset.cmd max.muster /Y      :: ohne Rückfrage
 Profil-Reset.cmd max.muster /TEST   :: Testlauf, zeigt nur an
 ```
 
-Protokoll: `%ProgramData%\ProfileReset\Profil-Reset_<Profil>.log`
-
 **Empfohlen:** Zuerst mit `/TEST` laufen lassen.
 
 ## Einsatzmöglichkeiten
@@ -41,5 +39,5 @@ Zuverlässiger ist die GPO (*Desktophintergrund* bzw. *Bestimmtes Standardbild f
 ## Hinweise
 
 * Das Löschen ist **endgültig**. Bei OneDrive-umgeleiteten Ordnern werden die Dateien auch in der Cloud gelöscht (dort landen sie im OneDrive-Papierkorb).
-* Wird das Skript vom Desktop oder aus Downloads des Zielprofils gestartet, kopiert es sich nach `%ProgramData%\ProfileReset` und startet sich von dort neu.
+* Wird das Skript vom Desktop oder aus Downloads des Zielprofils gestartet, kopiert es sich nach `%PUBLIC%` (C:\Users\Public) und startet sich von dort neu; die Kopie wird am Ende wieder entfernt.
 * Gesperrte Dateien (z.B. in `Temp`) werden übersprungen, wenn der Benutzer angemeldet ist.

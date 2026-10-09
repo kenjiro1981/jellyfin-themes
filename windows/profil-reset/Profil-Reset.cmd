@@ -89,11 +89,6 @@ goto parse_args
 pushd "%SystemRoot%"
 fltmc >nul 2>&1 && set "IS_ADMIN=1"
 
-rem --- Logdatei -------------------------------------------------------------
-set "LOGDIR=%ProgramData%\ProfileReset"
-if not exist "%LOGDIR%\" mkdir "%LOGDIR%" >nul 2>&1
-if not exist "%LOGDIR%\" set "LOGDIR=%PUBLIC%"
-
 rem --- Zielprofil ermitteln --------------------------------------------------
 set "PROFILES_ROOT=%SystemDrive%\Users"
 for /f "tokens=2,*" %%A in ('reg query "%PL%" /v ProfilesDirectory 2^>nul ^| find /i "ProfilesDirectory"') do call set "PROFILES_ROOT=%%B"
@@ -106,7 +101,6 @@ if "%TARGET:\=%"=="%TARGET%" set "PROFILE_DIR=%PROFILES_ROOT%\%TARGET%"
 if "%PROFILE_DIR:~-1%"=="\" set "PROFILE_DIR=%PROFILE_DIR:~0,-1%"
 for %%I in ("%PROFILE_DIR%") do set "PROFILE_NAME=%%~nxI"
 if /i "%PROFILE_DIR%"=="%USERPROFILE%" set "SELF=1"
-set "LOG=%LOGDIR%\Profil-Reset_%PROFILE_NAME%.log"
 
 rem --- Sicherheitspruefungen -------------------------------------------------
 if not exist "%PROFILE_DIR%\NTUSER.DAT" (
@@ -137,10 +131,11 @@ rem --- Skript liegt im Zielprofil? Dann Kopie ausserhalb starten, da es sich
 rem     sonst ggf. selbst loescht (z.B. vom Desktop oder aus Downloads gestartet).
 set "SCRIPT_DIR=%~dp0"
 call set "REST=%%SCRIPT_DIR:%PROFILE_DIR%\=%%"
-if /i not "%REST%"=="%SCRIPT_DIR%" if /i not "%SCRIPT_DIR%"=="%LOGDIR%\" (
-  copy /y "%~f0" "%LOGDIR%\Profil-Reset.cmd" >nul || goto fail
+set "COPY=%PUBLIC%\Profil-Reset.cmd"
+if /i not "%REST%"=="%SCRIPT_DIR%" if /i not "%~f0"=="%COPY%" (
+  copy /y "%~f0" "%COPY%" >nul || goto fail
   popd
-  "%LOGDIR%\Profil-Reset.cmd" %ORIGARGS%
+  "%COPY%" %ORIGARGS%
 )
 
 rem --- SID ermitteln (fuer Papierkorb und Anmeldepruefung) -------------------
@@ -178,7 +173,7 @@ if /i not "%ANSWER%"=="JA" (
 )
 :confirmed
 
-call :Log "===== Start Profil-Reset fuer %PROFILE_DIR% (SID %SID%, Testlauf=%DRY%) ====="
+call :Log "===== Profil-Reset fuer %PROFILE_DIR% (SID %SID%, Testlauf=%DRY%) ====="
 
 rem --- Registry des Benutzers bereitstellen ----------------------------------
 if "%SELF%"=="1" (
@@ -335,7 +330,7 @@ rem ===========================================================================
 call :Log "===== Profil-Reset abgeschlossen ====="
 call :UnloadHive
 echo.
-echo Fertig. Protokoll: %LOG%
+echo Fertig.
 if "%SELF%"=="1" if "%LOGOFF_AFTER%"=="1" if "%DRY%"=="0" (
   echo Abmeldung in 5 Sekunden ...
   ping -n 6 127.0.0.1 >nul
@@ -349,7 +344,6 @@ rem ===========================================================================
 
 :Log
 echo %~1
->>"%LOG%" echo [%DATE% %TIME%] %~1
 goto :eof
 
 rem Inhalt eines Ordners loeschen, Ordner selbst und desktop.ini behalten
@@ -452,9 +446,12 @@ goto end
 call :UnloadHive
 popd
 endlocal
+if /i "%~f0"=="%PUBLIC%\Profil-Reset.cmd" (goto) 2>nul & del /f /q "%~f0" & exit /b 1
 exit /b 1
 
 :end
 popd
 endlocal
+rem temporaere Kopie (siehe oben) wieder entfernen
+if /i "%~f0"=="%PUBLIC%\Profil-Reset.cmd" (goto) 2>nul & del /f /q "%~f0" & exit /b 0
 exit /b 0
