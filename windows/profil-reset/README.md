@@ -1,6 +1,12 @@
 # Profil-Reset.cmd
 
-Setzt ein Windows-Benutzerprofil zurück, **ohne das Profil zu löschen**. Deshalb bleiben die Standard-Apps und Dateizuordnungen erhalten (Browser, PDF, Mail usw., also `UserChoice` in `NTUSER.DAT` / `UsrClass.dat`), außerdem Startmenü, Store-Apps und Anwendungseinstellungen.
+Abmeldeskript, das das Profil des gerade abmeldenden Benutzers zurücksetzt, **ohne das Profil zu löschen**. Deshalb bleiben die Standard-Apps und Dateizuordnungen erhalten (Browser, PDF, Mail usw.), außerdem Startmenü, Store-Apps und Anwendungseinstellungen.
+
+## Einrichtung (GPO)
+
+Benutzerkonfiguration → Richtlinien → Windows-Einstellungen → Skripts → **Abmelden** → `Profil-Reset.cmd` hinzufügen (z.B. aus `\\intern.afz-rostock.de\NETLOGON\`).
+
+Testlauf, bei dem nur angezeigt und nichts gelöscht wird: `Profil-Reset.cmd /TEST`
 
 ## Was gelöscht wird
 
@@ -11,33 +17,18 @@ Setzt ein Windows-Benutzerprofil zurück, **ohne das Profil zu löschen**. Desha
 | Papierkorb | `X:\$Recycle.Bin\<SID>` auf allen Laufwerken |
 | Spuren | Zuletzt verwendet, Sprunglisten/Schnellzugriff, Temp, Thumbnail-Cache, Aktivitätsverlauf, Zwischenablage |
 | Registry-MRUs | Ausführen, Explorer-Adressleiste/Suche, Öffnen/Speichern-Dialoge, Office 2016+/365, Adobe Reader/Acrobat, Remotedesktop |
-| optional | Windows-Anmeldedaten (Standard: an), Taskleisten-Pins (aus), Netzlaufwerke (aus) |
-
-## Verwendung
-
-```bat
-Profil-Reset.cmd                    :: aktuellen Benutzer zurücksetzen (fragt nach)
-Profil-Reset.cmd max.muster         :: Profil C:\Users\max.muster (als Admin, Benutzer abgemeldet)
-Profil-Reset.cmd max.muster /Y      :: ohne Rückfrage
-Profil-Reset.cmd max.muster /TEST   :: Testlauf, zeigt nur an
-```
-
-**Empfohlen:** Zuerst mit `/TEST` laufen lassen.
-
-## Einsatzmöglichkeiten
-
-* **Abmeldeskript (GPO)**: Benutzerkonfiguration → Windows-Einstellungen → Skripts → Abmelden: `Profil-Reset.cmd /Y`
-* **Anmeldeskript**: ebenfalls `Profil-Reset.cmd /Y` (läuft vor dem Desktop, Browser sind noch zu)
-* **Als Admin/SYSTEM** (z.B. Startskript oder geplante Aufgabe beim Start): `Profil-Reset.cmd <Profilordner> /Y`. Der Benutzer muss abgemeldet sein. Diese Variante ist die gründlichste, weil keine Dateien in Benutzung sind.
+| optional (1 = an, 0 = aus) | `RESET_CREDENTIALS` Windows-Anmeldedaten (an), `RESET_TASKBAR` Taskleisten-Pins (aus), `RESET_NETDRIVES` Netzlaufwerke (aus) |
 
 ## Hintergrund / Sperrbildschirm
 
-Konfiguriert sind `\\intern.afz-rostock.de\NETLOGON\Hintergrund\AFZ-Wallpaper.png` (Hintergrund) und `AFZ-Sperrbildschirm.png` (Sperrbildschirm). Leer lassen = nicht ändern. Das Sperrbildschirm-Bild wird lokal nach `%SystemRoot%\Web\Screen` kopiert, weil es auch vor der Anmeldung ohne Netzwerkzugriff verfügbar sein muss.
-Der Sperrbildschirm wird über `PersonalizationCSP` (HKLM) gesetzt. Das braucht Adminrechte, gilt für alle Benutzer und funktioniert auch mit Windows Pro.
-Zuverlässiger ist die GPO (*Desktophintergrund* bzw. *Bestimmtes Standardbild für den Sperrbildschirm erzwingen*, letzteres nur für Enterprise/Education).
+* **Hintergrund:** `WALLPAPER` oben im Skript (aktuell `\\intern.afz-rostock.de\NETLOGON\Hintergrund\AFZ-Wallpaper.png`). Leer lassen = nicht ändern. Das Bild ist ab der nächsten Anmeldung zu sehen.
+* **Sperrbildschirm:** Das kann ein Abmeldeskript nicht setzen, weil dafür Adminrechte (HKLM) nötig sind. Lösung per GPO:
+  * Enterprise/Education: Computerkonfiguration → Administrative Vorlagen → Systemsteuerung → Anpassung → *Bestimmtes Standardbild für den Sperrbildschirm und die Anmeldung erzwingen*
+  * Pro: Computerkonfiguration → Einstellungen → Windows-Einstellungen → **Registrierung**, Schlüssel `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP`:
+    `LockScreenImagePath` und `LockScreenImageUrl` (REG_SZ, Bildpfad), `LockScreenImageStatus` (REG_DWORD 1).
+    Das Bild am besten vorher per GPO-Einstellung *Dateien* lokal kopieren (z.B. nach `C:\Windows\Web\Screen\`).
 
 ## Hinweise
 
 * Das Löschen ist **endgültig**. Bei OneDrive-umgeleiteten Ordnern werden die Dateien auch in der Cloud gelöscht (dort landen sie im OneDrive-Papierkorb).
-* Wird das Skript vom Desktop oder aus Downloads des Zielprofils gestartet, kopiert es sich nach `%PUBLIC%` (C:\Users\Public) und startet sich von dort neu; die Kopie wird am Ende wieder entfernt.
-* Gesperrte Dateien (z.B. in `Temp`) werden übersprungen, wenn der Benutzer angemeldet ist.
+* Das Skript tut nichts, wenn es nicht im Kontext eines normalen Benutzers läuft (z.B. als SYSTEM).
